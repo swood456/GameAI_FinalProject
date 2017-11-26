@@ -19,14 +19,12 @@ public class MakeWorld : MonoBehaviour {
     [SerializeField]
     private GameObject SnakeHead;
 
+    [SerializeField]
+    private GameObject Apple;
+
     private char[,] map;
 
-    // Use this for initialization
-    void Start () {
-        createMap();
-	}
-	
-	void createMap()
+    public char[,] createMap()
     {
         // for now map is a 2d array of chars, might be better to be something simpler?
         map = new char[map_w + 2, map_h + 2];
@@ -35,18 +33,26 @@ public class MakeWorld : MonoBehaviour {
         {
             map[i, 0] = 'w';
             map[i, map_h + 1] = 'w';
+
+            // place a wall block
+            Instantiate(Wall, new Vector3(i, 0), Quaternion.identity);
+            Instantiate(Wall, new Vector3(i, map_h + 1), Quaternion.identity);
         }
 
         for(int j = 0; j < map_h; ++j)
         {
             map[0, j + 1] = 'w';
             map[map_w + 1, j + 1] = 'w';
+
+            Instantiate(Wall, new Vector3(0, j+1), Quaternion.identity);
+            Instantiate(Wall, new Vector3(map_w + 1, j + 1), Quaternion.identity);
         }
 
         int s_i = Random.Range(0, map_w - 1);
         int s_j = Random.Range(0, map_h - 1);
 
         map[s_i + 1, s_j + 1] = 'h';
+        Instantiate(SnakeHead, new Vector3(s_i + 1, s_j + 1), Quaternion.identity);
 
         // start position for the apple
         //  start it in the same spot as snake head then move it until free
@@ -60,5 +66,9 @@ public class MakeWorld : MonoBehaviour {
         }
 
         map[a_i + 1, a_j + 1] = 'a';
+        Instantiate(Apple, new Vector3(a_i + 1, a_j + 1), Quaternion.identity);
+
+
+        return map;
     }
 }
