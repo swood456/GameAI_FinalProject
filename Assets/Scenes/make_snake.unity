@@ -229,7 +229,8 @@ MonoBehaviour:
   map_h: 10
   Wall: {fileID: 1830077839978014, guid: f268f404f7401e8418ed64ac96c7310a, type: 2}
   start_length: 0
-  SnakeHead: {fileID: 0}
+  SnakeHead: {fileID: 1913469287968606, guid: acdb079c9229bb1488c130a17cc40def, type: 2}
+  Apple: {fileID: 1005522491203298, guid: 94b20ea43a2a5fa4aa6cf2c1593d7861, type: 2}
 --- !u!4 &1602499489
 Transform:
   m_ObjectHideFlags: 0

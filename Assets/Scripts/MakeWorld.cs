@@ -5,10 +5,10 @@ using UnityEngine;
 public class MakeWorld : MonoBehaviour {
 
     [SerializeField]
-    private int map_w = 10;
+    public int map_w = 10;
 
     [SerializeField]
-    private int map_h = 10;
+    public int map_h = 10;
 
     [SerializeField]
     private GameObject Wall;
@@ -23,11 +23,21 @@ public class MakeWorld : MonoBehaviour {
     private GameObject Apple;
 
     private char[,] map;
+    public GameObject real_apple;
 
     public char[,] createMap()
     {
         // for now map is a 2d array of chars, might be better to be something simpler?
         map = new char[map_w + 2, map_h + 2];
+
+        // set up center to be empty
+        for(int i = 0; i < map_w; ++i)
+        {
+            for(int j = 0; j < map_h; ++j)
+            {
+                map[i + 1, j + 1] = 'e';
+            }
+        }
 
         for(int i = 0; i < map_w + 2; ++i)
         {
@@ -66,7 +76,7 @@ public class MakeWorld : MonoBehaviour {
         }
 
         map[a_i + 1, a_j + 1] = 'a';
-        Instantiate(Apple, new Vector3(a_i + 1, a_j + 1), Quaternion.identity);
+        real_apple = Instantiate(Apple, new Vector3(a_i + 1, a_j + 1), Quaternion.identity);
 
 
         return map;
