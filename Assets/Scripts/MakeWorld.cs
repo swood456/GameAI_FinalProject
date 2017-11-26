@@ -47,5 +47,18 @@ public class MakeWorld : MonoBehaviour {
         int s_j = Random.Range(0, map_h - 1);
 
         map[s_i + 1, s_j + 1] = 'h';
+
+        // start position for the apple
+        //  start it in the same spot as snake head then move it until free
+        int a_i = s_i;
+        int a_j = s_j;
+
+        while(a_i == s_i && a_j == s_j)
+        {
+            a_i = Random.Range(0, map_w - 1);
+            a_j = Random.Range(0, map_h - 1);
+        }
+
+        map[a_i + 1, a_j + 1] = 'a';
     }
 }
