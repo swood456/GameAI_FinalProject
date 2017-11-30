@@ -17,6 +17,9 @@ public class GameManager : MonoBehaviour {
     int map_w;
     int map_h;
 
+    public float desiredFrameRate;
+    float curTime = 0.0f;
+
     // Use this for initialization
     void Start () {
         // set up the world
@@ -44,20 +47,31 @@ public class GameManager : MonoBehaviour {
 
         // this drops framerate significantly (so that each movement takes 1 frame and is still easy to speed up)
         // this is probably not the best solution for making the game both run slow and fast
-        QualitySettings.vSyncCount = 0;
-        Application.targetFrameRate = 4;
+        //QualitySettings.vSyncCount = 0;
+        //Application.targetFrameRate = 4;
     }
 	
 	// Update is called once per frame
 	void Update () {
+        curTime += Time.deltaTime;
+        if(curTime >= 1.0f/desiredFrameRate)
+        {
+            update_world();
+            curTime = 0.0f;
+        }
+        
+    }
+
+    void update_world()
+    {
         if (snake_dead)
             return;
         // move the snake
-		if(controller.is_turn_left())
+        if (controller.is_turn_left())
         {
             // todo: make it turn left
         }
-        else if(controller.is_turn_right())
+        else if (controller.is_turn_right())
         {
             // todo: make it turn right
         }
@@ -65,7 +79,7 @@ public class GameManager : MonoBehaviour {
         {
             map[(int)snake_pos.x, (int)snake_pos.y] = 'e';
 
-            snake_pos += snake_dir;            
+            snake_pos += snake_dir;
         }
 
         check_snake_pos();
