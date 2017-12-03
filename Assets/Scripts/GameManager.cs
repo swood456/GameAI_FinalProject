@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class GameManager : MonoBehaviour {
 
-    public enum ControllType { Player, SimplAI, QLearn};
+    public enum ControllType { Player, SimpleAI, QLearn};
     public ControllType controll_tye = ControllType.Player;
 
     private char[,] map;
@@ -71,15 +71,52 @@ public class GameManager : MonoBehaviour {
         if (snake_dead)
             return;
         // move the snake
-        if (controller.is_turn_left())
+        //if (controller.is_turn_left()) // now we do it in our code
+        if(isTurnLeft())
         {
             // todo: make it turn left
-            snake_dir = Vector2.up;
+            //snake_dir = Vector2.up;
+
+            // gotta be a better way but brains off team
+            if(snake_dir == Vector2.up)
+            {
+                snake_dir = Vector2.left;
+            }
+            else if (snake_dir == Vector2.right)
+            {
+                snake_dir = Vector2.up;
+            }
+            else if (snake_dir == Vector2.down)
+            {
+                snake_dir = Vector2.right;
+            }
+            else if (snake_dir == Vector2.left)
+            {
+                snake_dir = Vector2.down;
+            }
         }
-        else if (controller.is_turn_right())
+        //else if (controller.is_turn_right())
+        else if(isTurnRight())
         {
             // todo: make it turn right
-            snake_dir = Vector2.down;
+            //snake_dir = Vector2.down;
+
+            if (snake_dir == Vector2.up)
+            {
+                snake_dir = Vector2.right;
+            }
+            else if (snake_dir == Vector2.right)
+            {
+                snake_dir = Vector2.down;
+            }
+            else if (snake_dir == Vector2.down)
+            {
+                snake_dir = Vector2.left;
+            }
+            else if (snake_dir == Vector2.left)
+            {
+                snake_dir = Vector2.up;
+            }
         }
         else
         {
@@ -97,6 +134,56 @@ public class GameManager : MonoBehaviour {
         map[(int)snake_pos.x, (int)snake_pos.y] = 'h';
 
         controller.transform.position = snake_pos;
+    }
+
+    bool isTurnLeft()
+    {
+        if(controll_tye == ControllType.Player)
+        {
+            // there HAS to be a good way to do this but I don't want to think
+            if( snake_dir == Vector2.right && Input.GetKey(KeyCode.UpArrow) ||
+                snake_dir == Vector2.down && Input.GetKey(KeyCode.RightArrow) ||
+                snake_dir == Vector2.left && Input.GetKey(KeyCode.DownArrow) ||
+                snake_dir == Vector2.up && Input.GetKey(KeyCode.LeftArrow))
+            {
+                return true;
+            }
+        }
+        else if (controll_tye == ControllType.SimpleAI)
+        {
+
+        }
+        if (controll_tye == ControllType.QLearn)
+        {
+            // todo: make Q learning work
+        }
+
+        return false;
+    }
+
+    bool isTurnRight()
+    {
+        if (controll_tye == ControllType.Player)
+        {
+            // there HAS to be a good way to do this but I don't want to think
+            if (snake_dir == Vector2.right && Input.GetKey(KeyCode.DownArrow) ||
+                snake_dir == Vector2.down && Input.GetKey(KeyCode.LeftArrow) ||
+                snake_dir == Vector2.left && Input.GetKey(KeyCode.UpArrow) ||
+                snake_dir == Vector2.up && Input.GetKey(KeyCode.RightArrow))
+            {
+                return true;
+            }
+        }
+        else if (controll_tye == ControllType.SimpleAI)
+        {
+
+        }
+        if (controll_tye == ControllType.QLearn)
+        {
+            // todo: make Q learning work
+        }
+
+        return false;
     }
 
     void check_snake_pos()
