@@ -208,7 +208,7 @@ GameObject:
   - component: {fileID: 1602499488}
   - component: {fileID: 1602499490}
   m_Layer: 0
-  m_Name: MapMaker
+  m_Name: GameManager
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -256,4 +256,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aaef6466b5053ce488d8a5b29bdaf9e0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  desiredFrameRate: 2
+  controll_tye: 0
+  tailObj: {fileID: 1236256913327490, guid: 7855b5bedc823e349b7b4bb2f337cb0f, type: 2}
+  desiredFrameRate: 4

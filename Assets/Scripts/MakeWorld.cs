@@ -14,7 +14,8 @@ public class MakeWorld : MonoBehaviour {
     private GameObject Wall;
 
     [SerializeField]
-    private int start_length;
+    public int start_length;
+    // note: I am  now doing starting length in the game manager for ease
 
     [SerializeField]
     private GameObject SnakeHead;

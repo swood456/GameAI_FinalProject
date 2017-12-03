@@ -9,6 +9,7 @@ public class GameManager : MonoBehaviour {
 
     private char[,] map;
     SnakeController controller;
+    public GameObject tailObj;
     Vector2 snake_dir;
     Vector2 snake_pos;
     Vector2 snake_old_pos;
@@ -23,6 +24,10 @@ public class GameManager : MonoBehaviour {
 
     public float desiredFrameRate;
     float curTime = 0.0f;
+
+    List<Vector2> tailPos;
+    List<GameObject> tailObjs;
+    int starting_length = 2;
 
     // Use this for initialization
     void Start () {
@@ -49,6 +54,18 @@ public class GameManager : MonoBehaviour {
             }
         }
 
+        // set up tail
+        Vector2 tail_vec2 = controller.transform.position - (Vector3)snake_dir;
+        tailPos = new List<Vector2>();
+        tailPos.Add(tail_vec2);
+
+        GameObject tail = Instantiate(tailObj, tail_vec2, Quaternion.identity);
+        tailObjs = new List<GameObject>();
+        tailObjs.Add(tail);
+
+        map[(int)tailPos[0].x, (int)tailPos[0].y] = 't';
+
+
         // this drops framerate significantly (so that each movement takes 1 frame and is still easy to speed up)
         // this is probably not the best solution for making the game both run slow and fast
         //QualitySettings.vSyncCount = 0;
@@ -65,6 +82,8 @@ public class GameManager : MonoBehaviour {
         }
         
     }
+    bool addTailPiece = false;
+    Vector2 oldAppleLoc;
 
     void update_world()
     {
@@ -121,8 +140,7 @@ public class GameManager : MonoBehaviour {
         else
         {
             //map[(int)snake_pos.x, (int)snake_pos.y] = 'e';
-            
-
+            // move forward
         }
         snake_old_pos = snake_pos;
         snake_pos += snake_dir;
@@ -130,10 +148,39 @@ public class GameManager : MonoBehaviour {
         check_snake_pos();
 
         // update board
-        map[(int)snake_old_pos.x, (int)snake_old_pos.y] = 'e';
         map[(int)snake_pos.x, (int)snake_pos.y] = 'h';
+        //map[(int)snake_old_pos.x, (int)snake_old_pos.y] = 'e';
+
+        // update tail
+        
+        //for (int i = 1; i < tailPos.Count; ++i)
+        for(int i = tailPos.Count - 1; i >=1; --i)
+        {
+            tailPos[i] = tailPos[i-1];
+            tailObjs[i].transform.position = tailObjs[i-1].transform.position;
+            map[(int)tailPos[i].x, (int)tailPos[i].y] = 't';
+        }
+
+        tailPos[0] = snake_old_pos;
+        tailObjs[0].transform.position = snake_old_pos;
+        map[(int)tailPos[0].x, (int)tailPos[0].y] = 't';
+
+        if (addTailPiece)
+        {
+            //Vector2 tail_vec2 = controller.transform.position - (Vector3)snake_dir;
+            //tailPos = new List<Vector2>();
+            tailPos.Add(oldAppleLoc);
+
+            GameObject tail = Instantiate(tailObj, oldAppleLoc, Quaternion.identity);
+            tailObjs.Add(tail);
+
+            map[(int)oldAppleLoc.x, (int)oldAppleLoc.y] = 't';
+        }
+
+        map[(int)tailPos[tailPos.Count-1].x, (int)tailPos[tailPos.Count-1].y] = 'e';
 
         controller.transform.position = snake_pos;
+
     }
 
     bool isTurnLeft()
@@ -188,6 +235,7 @@ public class GameManager : MonoBehaviour {
 
     void check_snake_pos()
     {
+        addTailPiece = false;
         char current_space = map[(int)snake_pos.x, (int)snake_pos.y];
         if (current_space == 'e')
             return;
@@ -196,6 +244,8 @@ public class GameManager : MonoBehaviour {
         if(current_space == 'a')
         {
             score++;
+            addTailPiece = true;
+            oldAppleLoc = tailPos[tailPos.Count - 1];
 
             int a_i = Random.Range(1, map_w);
             int a_j = Random.Range(1, map_h);
@@ -211,10 +261,12 @@ public class GameManager : MonoBehaviour {
             // move apple in world
             apple.transform.position = new Vector3(a_i, a_j);
         }
-        else if(current_space == 'w')
+        //else if(current_space == 'w')
+        else
         {
             // do something real here other than just setting it to be dead
             snake_dead = true;
+            print("DEAD!");
         }
     }
 }
