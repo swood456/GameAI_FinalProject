@@ -4,10 +4,14 @@ using UnityEngine;
 
 public class GameManager : MonoBehaviour {
 
+    public enum ControllType { Player, SimplAI, QLearn};
+    public ControllType controll_tye = ControllType.Player;
+
     private char[,] map;
     SnakeController controller;
     Vector2 snake_dir;
     Vector2 snake_pos;
+    Vector2 snake_old_pos;
 
     GameObject apple;
 
@@ -70,21 +74,28 @@ public class GameManager : MonoBehaviour {
         if (controller.is_turn_left())
         {
             // todo: make it turn left
+            snake_dir = Vector2.up;
         }
         else if (controller.is_turn_right())
         {
             // todo: make it turn right
+            snake_dir = Vector2.down;
         }
         else
         {
-            map[(int)snake_pos.x, (int)snake_pos.y] = 'e';
+            //map[(int)snake_pos.x, (int)snake_pos.y] = 'e';
+            
 
-            snake_pos += snake_dir;
         }
+        snake_old_pos = snake_pos;
+        snake_pos += snake_dir;
 
         check_snake_pos();
 
+        // update board
+        map[(int)snake_old_pos.x, (int)snake_old_pos.y] = 'e';
         map[(int)snake_pos.x, (int)snake_pos.y] = 'h';
+
         controller.transform.position = snake_pos;
     }
 
