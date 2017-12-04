@@ -4,6 +4,8 @@ using UnityEngine;
 
 public class GameManager : MonoBehaviour {
 
+    Vector2[] directions = {Vector2.up, Vector2.right, Vector2.down, Vector2.left };
+
     public enum ControllType { Player, SimpleAI, QLearn};
     public ControllType controll_tye = ControllType.Player;
 
@@ -11,6 +13,7 @@ public class GameManager : MonoBehaviour {
     SnakeController controller;
     public GameObject tailObj;
     Vector2 snake_dir;
+    int snake_dir_index = 1;
     Vector2 snake_pos;
     Vector2 snake_old_pos;
 
@@ -89,59 +92,26 @@ public class GameManager : MonoBehaviour {
     {
         if (snake_dead)
             return;
+        
+
+        if(controll_tye == ControllType.SimpleAI)
+        {
+
+        }
         // move the snake
-        //if (controller.is_turn_left()) // now we do it in our code
-        if(isTurnLeft())
-        {
-            // todo: make it turn left
-            //snake_dir = Vector2.up;
-
-            // gotta be a better way but brains off team
-            if(snake_dir == Vector2.up)
-            {
-                snake_dir = Vector2.left;
-            }
-            else if (snake_dir == Vector2.right)
-            {
-                snake_dir = Vector2.up;
-            }
-            else if (snake_dir == Vector2.down)
-            {
-                snake_dir = Vector2.right;
-            }
-            else if (snake_dir == Vector2.left)
-            {
-                snake_dir = Vector2.down;
-            }
-        }
-        //else if (controller.is_turn_right())
-        else if(isTurnRight())
-        {
-            // todo: make it turn right
-            //snake_dir = Vector2.down;
-
-            if (snake_dir == Vector2.up)
-            {
-                snake_dir = Vector2.right;
-            }
-            else if (snake_dir == Vector2.right)
-            {
-                snake_dir = Vector2.down;
-            }
-            else if (snake_dir == Vector2.down)
-            {
-                snake_dir = Vector2.left;
-            }
-            else if (snake_dir == Vector2.left)
-            {
-                snake_dir = Vector2.up;
-            }
-        }
         else
         {
-            //map[(int)snake_pos.x, (int)snake_pos.y] = 'e';
-            // move forward
+            if (isTurnLeft())
+            {
+                turn_left();
+            }
+            else if (isTurnRight())
+            {
+                turn_right();
+            }
         }
+        
+
         snake_old_pos = snake_pos;
         snake_pos += snake_dir;
 
@@ -152,9 +122,8 @@ public class GameManager : MonoBehaviour {
         //map[(int)snake_old_pos.x, (int)snake_old_pos.y] = 'e';
 
         // update tail
-        
-        //for (int i = 1; i < tailPos.Count; ++i)
-        for(int i = tailPos.Count - 1; i >=1; --i)
+        map[(int)tailPos[tailPos.Count - 1].x, (int)tailPos[tailPos.Count - 1].y] = 'e';
+        for (int i = tailPos.Count - 1; i >=1; --i)
         {
             tailPos[i] = tailPos[i-1];
             tailObjs[i].transform.position = tailObjs[i-1].transform.position;
@@ -177,10 +146,65 @@ public class GameManager : MonoBehaviour {
             map[(int)oldAppleLoc.x, (int)oldAppleLoc.y] = 't';
         }
 
-        map[(int)tailPos[tailPos.Count-1].x, (int)tailPos[tailPos.Count-1].y] = 'e';
+        
 
         controller.transform.position = snake_pos;
 
+        // debug: print all indexes with h
+        //int count = 0;
+        //for (int j = 0; j < map_h; ++j)
+        //{
+        //    for (int i = 0; i < map_w; ++i)
+        //    {
+        //        if (map[i, j] == 't')
+        //        {
+        //            print("t at : " + i + " , " + j);
+        //            count++;
+        //        }
+        //    }
+        //}
+        //print("count: " + count);
+    }
+
+    void turn_left()
+    {
+        // gotta be a better way but not worth
+        if (snake_dir == Vector2.up)
+        {
+            snake_dir = Vector2.left;
+        }
+        else if (snake_dir == Vector2.right)
+        {
+            snake_dir = Vector2.up;
+        }
+        else if (snake_dir == Vector2.down)
+        {
+            snake_dir = Vector2.right;
+        }
+        else if (snake_dir == Vector2.left)
+        {
+            snake_dir = Vector2.down;
+        }
+    }
+
+    void turn_right()
+    {
+        if (snake_dir == Vector2.up)
+        {
+            snake_dir = Vector2.right;
+        }
+        else if (snake_dir == Vector2.right)
+        {
+            snake_dir = Vector2.down;
+        }
+        else if (snake_dir == Vector2.down)
+        {
+            snake_dir = Vector2.left;
+        }
+        else if (snake_dir == Vector2.left)
+        {
+            snake_dir = Vector2.up;
+        }
     }
 
     bool isTurnLeft()
