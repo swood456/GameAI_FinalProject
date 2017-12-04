@@ -12,7 +12,7 @@ public class GameManager : MonoBehaviour {
     private char[,] map;
     SnakeController controller;
     public GameObject tailObj;
-    Vector2 snake_dir;
+    //Vector2 snake_dir;
     int snake_dir_index = 1;
     Vector2 snake_pos;
     Vector2 snake_old_pos;
@@ -42,8 +42,8 @@ public class GameManager : MonoBehaviour {
         apple = makeWorld.real_apple;
 
         controller = FindObjectOfType<SnakeController>();
-        snake_dir.x = 1;
-        snake_dir.y = 0;
+        //snake_dir.x = 1;
+        //snake_dir.y = 0;
 
         for(int i = 0; i < map_w + 2; ++i)
         {
@@ -58,7 +58,7 @@ public class GameManager : MonoBehaviour {
         }
 
         // set up tail
-        Vector2 tail_vec2 = controller.transform.position - (Vector3)snake_dir;
+        Vector2 tail_vec2 = controller.transform.position - (Vector3)directions[snake_dir_index];//(Vector3)snake_dir;
         tailPos = new List<Vector2>();
         tailPos.Add(tail_vec2);
 
@@ -96,7 +96,7 @@ public class GameManager : MonoBehaviour {
 
         if(controll_tye == ControllType.SimpleAI)
         {
-
+            simple_AI_controlls();
         }
         // move the snake
         else
@@ -113,7 +113,8 @@ public class GameManager : MonoBehaviour {
         
 
         snake_old_pos = snake_pos;
-        snake_pos += snake_dir;
+        //snake_pos += snake_dir;
+        snake_pos += directions[snake_dir_index];
 
         check_snake_pos();
 
@@ -168,54 +169,76 @@ public class GameManager : MonoBehaviour {
 
     void turn_left()
     {
-        // gotta be a better way but not worth
-        if (snake_dir == Vector2.up)
-        {
-            snake_dir = Vector2.left;
-        }
-        else if (snake_dir == Vector2.right)
-        {
-            snake_dir = Vector2.up;
-        }
-        else if (snake_dir == Vector2.down)
-        {
-            snake_dir = Vector2.right;
-        }
-        else if (snake_dir == Vector2.left)
-        {
-            snake_dir = Vector2.down;
-        }
+        snake_dir_index = (snake_dir_index + directions.Length - 1) % directions.Length;
     }
 
     void turn_right()
     {
-        if (snake_dir == Vector2.up)
+        snake_dir_index = (snake_dir_index + 1) % directions.Length;
+    }
+
+    void simple_AI_controlls()
+    {
+        // simple AI controller
+
+        // list of possible directions, we will pick one at random
+        List<int> pos_dirs = new List<int>();
+
+        // if we can move left, add it as possible
+        Vector2 left_pos = snake_pos + directions[(snake_dir_index + directions.Length - 1) % directions.Length];
+        if (map[(int)left_pos.x, (int)left_pos.y] == 'a')
         {
-            snake_dir = Vector2.right;
+            snake_dir_index = (snake_dir_index + directions.Length - 1) % directions.Length;
+            return;
         }
-        else if (snake_dir == Vector2.right)
+        if (map[(int)left_pos.x, (int)left_pos.y] == 'e')
         {
-            snake_dir = Vector2.down;
+            //print("left");
+            pos_dirs.Add((snake_dir_index + directions.Length - 1) % directions.Length);
         }
-        else if (snake_dir == Vector2.down)
+
+
+        Vector2 fwd_pos = snake_pos + directions[snake_dir_index];
+        if (map[(int)fwd_pos.x, (int)fwd_pos.y] == 'a')
         {
-            snake_dir = Vector2.left;
+            return;
         }
-        else if (snake_dir == Vector2.left)
+        if (map[(int)fwd_pos.x, (int)fwd_pos.y] == 'e')
         {
-            snake_dir = Vector2.up;
+            //print("fwd");
+            pos_dirs.Add(snake_dir_index);
+        }
+
+        Vector2 right_pos = snake_pos + directions[(snake_dir_index + 1) % directions.Length];
+        if (map[(int)right_pos.x, (int)right_pos.y] == 'a')
+        {
+            snake_dir_index = (snake_dir_index + 1) % directions.Length;
+            return;
+        }
+        if (map[(int)right_pos.x, (int)right_pos.y] == 'e')
+        {
+            //print("right");
+            pos_dirs.Add((snake_dir_index + 1) % directions.Length);
+        }
+        
+        if (pos_dirs.Count > 0)
+        {
+            int rng_index = Random.Range(0, pos_dirs.Count);
+            //print(rng_index);
+            snake_dir_index = pos_dirs[rng_index];
         }
     }
+
 
     bool isTurnLeft()
     {
         if(controll_tye == ControllType.Player)
         {
-            // there HAS to be a good way to do this but I don't want to think
-            if( snake_dir == Vector2.right && Input.GetKey(KeyCode.UpArrow) ||
-                snake_dir == Vector2.down && Input.GetKey(KeyCode.RightArrow) ||
-                snake_dir == Vector2.left && Input.GetKey(KeyCode.DownArrow) ||
-                snake_dir == Vector2.up && Input.GetKey(KeyCode.LeftArrow))
+            if( snake_dir_index == 0 && Input.GetKey(KeyCode.LeftArrow) ||
+                snake_dir_index == 1 && Input.GetKey(KeyCode.UpArrow) ||
+                snake_dir_index == 2 && Input.GetKey(KeyCode.RightArrow) ||
+                snake_dir_index == 3 && Input.GetKey(KeyCode.DownArrow)
+                )
             {
                 return true;
             }
@@ -236,11 +259,11 @@ public class GameManager : MonoBehaviour {
     {
         if (controll_tye == ControllType.Player)
         {
-            // there HAS to be a good way to do this but I don't want to think
-            if (snake_dir == Vector2.right && Input.GetKey(KeyCode.DownArrow) ||
-                snake_dir == Vector2.down && Input.GetKey(KeyCode.LeftArrow) ||
-                snake_dir == Vector2.left && Input.GetKey(KeyCode.UpArrow) ||
-                snake_dir == Vector2.up && Input.GetKey(KeyCode.RightArrow))
+            if (snake_dir_index == 0 && Input.GetKey(KeyCode.RightArrow) ||
+                snake_dir_index == 1 && Input.GetKey(KeyCode.DownArrow) ||
+                snake_dir_index == 2 && Input.GetKey(KeyCode.LeftArrow) ||
+                snake_dir_index == 3 && Input.GetKey(KeyCode.UpArrow)
+                )
             {
                 return true;
             }
