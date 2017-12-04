@@ -99,7 +99,7 @@ public class GameManager : MonoBehaviour {
             simple_AI_controlls();
         }
         // move the snake
-        else
+        else if (controll_tye == ControllType.Player)
         {
             if (isTurnLeft())
             {
@@ -109,6 +109,10 @@ public class GameManager : MonoBehaviour {
             {
                 turn_right();
             }
+        }
+        else if(controll_tye == ControllType.QLearn)
+        {
+            // TODO: Q learning
         }
         
 
@@ -120,7 +124,6 @@ public class GameManager : MonoBehaviour {
 
         // update board
         map[(int)snake_pos.x, (int)snake_pos.y] = 'h';
-        //map[(int)snake_old_pos.x, (int)snake_old_pos.y] = 'e';
 
         // update tail
         map[(int)tailPos[tailPos.Count - 1].x, (int)tailPos[tailPos.Count - 1].y] = 'e';
@@ -137,8 +140,6 @@ public class GameManager : MonoBehaviour {
 
         if (addTailPiece)
         {
-            //Vector2 tail_vec2 = controller.transform.position - (Vector3)snake_dir;
-            //tailPos = new List<Vector2>();
             tailPos.Add(oldAppleLoc);
 
             GameObject tail = Instantiate(tailObj, oldAppleLoc, Quaternion.identity);
@@ -193,7 +194,6 @@ public class GameManager : MonoBehaviour {
         }
         if (map[(int)left_pos.x, (int)left_pos.y] == 'e')
         {
-            //print("left");
             pos_dirs.Add((snake_dir_index + directions.Length - 1) % directions.Length);
         }
 
@@ -205,7 +205,6 @@ public class GameManager : MonoBehaviour {
         }
         if (map[(int)fwd_pos.x, (int)fwd_pos.y] == 'e')
         {
-            //print("fwd");
             pos_dirs.Add(snake_dir_index);
         }
 
@@ -217,14 +216,12 @@ public class GameManager : MonoBehaviour {
         }
         if (map[(int)right_pos.x, (int)right_pos.y] == 'e')
         {
-            //print("right");
             pos_dirs.Add((snake_dir_index + 1) % directions.Length);
         }
         
         if (pos_dirs.Count > 0)
         {
             int rng_index = Random.Range(0, pos_dirs.Count);
-            //print(rng_index);
             snake_dir_index = pos_dirs[rng_index];
         }
     }
@@ -232,9 +229,9 @@ public class GameManager : MonoBehaviour {
 
     bool isTurnLeft()
     {
-        if(controll_tye == ControllType.Player)
+        if (controll_tye == ControllType.Player)
         {
-            if( snake_dir_index == 0 && Input.GetKey(KeyCode.LeftArrow) ||
+            if (snake_dir_index == 0 && Input.GetKey(KeyCode.LeftArrow) ||
                 snake_dir_index == 1 && Input.GetKey(KeyCode.UpArrow) ||
                 snake_dir_index == 2 && Input.GetKey(KeyCode.RightArrow) ||
                 snake_dir_index == 3 && Input.GetKey(KeyCode.DownArrow)
@@ -243,15 +240,6 @@ public class GameManager : MonoBehaviour {
                 return true;
             }
         }
-        else if (controll_tye == ControllType.SimpleAI)
-        {
-
-        }
-        if (controll_tye == ControllType.QLearn)
-        {
-            // todo: make Q learning work
-        }
-
         return false;
     }
 
@@ -268,15 +256,6 @@ public class GameManager : MonoBehaviour {
                 return true;
             }
         }
-        else if (controll_tye == ControllType.SimpleAI)
-        {
-
-        }
-        if (controll_tye == ControllType.QLearn)
-        {
-            // todo: make Q learning work
-        }
-
         return false;
     }
 
@@ -308,7 +287,7 @@ public class GameManager : MonoBehaviour {
             // move apple in world
             apple.transform.position = new Vector3(a_i, a_j);
         }
-        //else if(current_space == 'w')
+        
         else
         {
             // do something real here other than just setting it to be dead

@@ -225,8 +225,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 72cc78d33b44ea3419286ebc0dcb91e6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  map_w: 20
-  map_h: 20
+  map_w: 10
+  map_h: 10
   Wall: {fileID: 1830077839978014, guid: f268f404f7401e8418ed64ac96c7310a, type: 2}
   start_length: 0
   SnakeHead: {fileID: 1913469287968606, guid: acdb079c9229bb1488c130a17cc40def, type: 2}
@@ -258,4 +258,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   controll_tye: 1
   tailObj: {fileID: 1236256913327490, guid: 7855b5bedc823e349b7b4bb2f337cb0f, type: 2}
-  desiredFrameRate: 100
+  desiredFrameRate: 10
