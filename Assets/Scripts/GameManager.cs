@@ -8,16 +8,35 @@ public struct State{
 	public List<Vector2> t;
 }
 
+public struct State2
+{
+    public bool is_left_valid;
+    public bool is_fwd_valid;
+    public bool is_right_valid;
+    public int x_diff;
+    public int y_diff;
+}
+
+public struct State3
+{
+    public bool is_left_valid;
+    public bool is_fwd_valid;
+    public bool is_right_valid;
+    public int angle_degrees;
+}
+
 public struct Key{
-    public State s;
-	public int a;
+    public State3 s;
+    //public State2 s;
+    //public State s;
+	//public int a;
 }
 
 public class GameManager : MonoBehaviour {
 
     Vector2[] directions = {Vector2.up, Vector2.right, Vector2.down, Vector2.left };
 
-    public enum ControllType { Player, SimpleAI, QLearn, MediumAI};
+    public enum ControllType { Player, SimpleAI, QLearn, RandomAI};
     public ControllType controll_tye = ControllType.Player;
 
     private char[,] map;
@@ -35,6 +54,8 @@ public class GameManager : MonoBehaviour {
 
     bool snake_dead = false;
     int score = 0;
+
+    public bool print_debug = false;
 
     int map_w;
     int map_h;
@@ -133,8 +154,10 @@ public class GameManager : MonoBehaviour {
                 update_world();
             curTime = 0.0f;
         }
-		//print (snake_pos);
-        
+        //print (snake_pos);
+
+        if (Input.GetKeyDown(KeyCode.Z))
+            print("num things in dict: " + QValueStore.Count);
     }
     bool addTailPiece = false;
     Vector2 oldAppleLoc;
@@ -145,9 +168,12 @@ public class GameManager : MonoBehaviour {
 			last_score = 0;
 
             // DEATH
+            /*
             Key t_key;
-            t_key.s = getState();
-            t_key.a = snake_dir_index;
+            //t_key.s = getState();
+            //t_key.s = getState2();
+            t_key.s = getState3();
+            //t_key.a = snake_dir_index;
             float n_Q = getQ(t_key);
             float reward =  -1;
             if (learn)
@@ -155,6 +181,7 @@ public class GameManager : MonoBehaviour {
                 float newQ = (1 - alpha) * oldQ + alpha * (reward + gamma * n_Q);
                 setQ(last, newQ);
             }
+            */
             learn = false;
             
             if(!replay_on_death)
@@ -212,8 +239,18 @@ public class GameManager : MonoBehaviour {
         {
             simple_AI_controlls();
         }
-        else if(controll_tye == ControllType.MediumAI)
+        else if(controll_tye == ControllType.RandomAI)
         {
+            List<int> actions = new List<int>();
+
+            //all possible actions from this state
+
+            actions.Add((snake_dir_index + directions.Length - 1) % directions.Length);
+            actions.Add(snake_dir_index);
+            actions.Add((snake_dir_index + 1) % directions.Length);
+
+            int rng_index = Random.Range(0, actions.Count);
+            snake_dir_index = actions[rng_index];
 
         }
         else if (controll_tye == ControllType.Player)
@@ -230,9 +267,9 @@ public class GameManager : MonoBehaviour {
         else if(controll_tye == ControllType.QLearn)
         {
 			Key t_key;
-            t_key.s = getState();
-            //t_key.s = getState2();
-            t_key.a = getBestActionQ();
+            //t_key.s = getState();
+            t_key.s = getState3();
+            //t_key.a = getBestActionQ();
 			float n_Q = getQ (t_key);
             float reward = score - last_score;
             if (learn) {
@@ -433,7 +470,7 @@ public class GameManager : MonoBehaviour {
 		return s;
 	}
 
-    /*
+    
     State2 getState2()
     {
         State2 s = new State2();
@@ -441,7 +478,15 @@ public class GameManager : MonoBehaviour {
         s.is_left_valid = map[(int)left_pos.x, (int)left_pos.y] == 'e' || map[(int)left_pos.x, (int)left_pos.y] == 'a';
 
         Vector2 fwd_pos = snake_pos + directions[snake_dir_index];
-        s.is_fwd_valid = map[(int)fwd_pos.x, (int)fwd_pos.y] == 'e' || map[(int)fwd_pos.x, (int)fwd_pos.y] == 'a';
+        try
+        {
+            s.is_fwd_valid = map[(int)fwd_pos.x, (int)fwd_pos.y] == 'e' || map[(int)fwd_pos.x, (int)fwd_pos.y] == 'a';
+        }
+        catch
+        {
+            s.is_fwd_valid = false;
+        }
+        
 
         Vector2 right_pos = snake_pos + directions[(snake_dir_index + 1) % directions.Length];
         s.is_right_valid = map[(int)right_pos.x, (int)right_pos.y] == 'e' || map[(int)right_pos.x, (int)right_pos.y] == 'a';
@@ -450,15 +495,47 @@ public class GameManager : MonoBehaviour {
         s.y_diff = (int)snake_pos.y - (int)apple.transform.position.y;
         return s;
     }
-    */
+
+    State3 getState3()
+    {
+        State3 s = new State3();
+
+        Vector2 left_pos = snake_pos + directions[(snake_dir_index + directions.Length - 1) % directions.Length];
+        s.is_left_valid = map[(int)left_pos.x, (int)left_pos.y] == 'e' || map[(int)left_pos.x, (int)left_pos.y] == 'a';
+
+        Vector2 fwd_pos = snake_pos + directions[snake_dir_index];
+        try
+        {
+            s.is_fwd_valid = map[(int)fwd_pos.x, (int)fwd_pos.y] == 'e' || map[(int)fwd_pos.x, (int)fwd_pos.y] == 'a';
+        }
+        catch
+        {
+            s.is_fwd_valid = false;
+        }
+
+
+        Vector2 right_pos = snake_pos + directions[(snake_dir_index + 1) % directions.Length];
+        s.is_right_valid = map[(int)right_pos.x, (int)right_pos.y] == 'e' || map[(int)right_pos.x, (int)right_pos.y] == 'a';
+
+        Vector2 appleVec = (Vector2)apple.transform.position - snake_pos;
+        s.angle_degrees = (int)Vector2.Angle(directions[snake_dir_index], appleVec.normalized);
+
+        if (Vector2.Dot(appleVec, directions[(snake_dir_index + directions.Length - 1) % directions.Length]) < 0)
+            s.angle_degrees *= -1;
+
+        return s;
+    }
+    
 
     float getQ(Key k){
 		float QVal;
 		bool suc = QValueStore.TryGetValue(k, out QVal);
 		if (suc) {
+            //print("found the key");
 			return QVal;
 		}
 		QValueStore.Add (k, 0.0f);
+        //print("making new key");
 		return 0.0f;
 	}
 
@@ -468,7 +545,7 @@ public class GameManager : MonoBehaviour {
 	}
 
 	int getBestActionQ(){
-        State s = getState ();
+        State3 s = getState3 ();
         //State2 s = getState2();
         List<int> actions = new List<int>();
 
@@ -483,7 +560,7 @@ public class GameManager : MonoBehaviour {
 		foreach (int act in actions) {
 			Key k;
 			k.s = s;
-			k.a = act;
+			//k.a = act;
 			float newVal = getQ (k);
 			if (newVal > bestQval) {
 				best = act;
@@ -498,8 +575,10 @@ public class GameManager : MonoBehaviour {
 		}
 		Key k_prime;
 		k_prime.s = s;
-		k_prime.a = best;
+		//k_prime.a = best;
 		last = k_prime;
+        if (print_debug)
+            print("best q: " + bestQval);
 		return best;
     }
 
@@ -534,13 +613,14 @@ public class GameManager : MonoBehaviour {
         List<int> actions = new List<int>();
 
         //all possible actions from this state
-        /*
+        
         actions.Add((snake_dir_index + directions.Length - 1) % directions.Length);
         actions.Add(snake_dir_index);
         actions.Add((snake_dir_index + 1) % directions.Length);
-        */
+        
 
         // only allow us to use ones that are not death
+        /*
         Vector2 left_pos = snake_pos + directions[(snake_dir_index + directions.Length - 1) % directions.Length];
         if (map[(int)left_pos.x, (int)left_pos.y] == 'e' || map[(int)left_pos.x, (int)left_pos.y] == 'a')
             actions.Add((snake_dir_index + directions.Length - 1) % directions.Length);
@@ -552,7 +632,7 @@ public class GameManager : MonoBehaviour {
         Vector2 right_pos = snake_pos + directions[(snake_dir_index + 1) % directions.Length];
         if (map[(int)right_pos.x, (int)right_pos.y] == 'e' || map[(int)right_pos.x, (int)right_pos.y] == 'a')
             actions.Add((snake_dir_index + 1) % directions.Length);
-
+        */
         if (Random.Range(0.0f, 1.0f) < rho)
         {
             //print("doing random");
@@ -575,9 +655,9 @@ public class GameManager : MonoBehaviour {
             int a = getBestActionQ();
             snake_dir_index = a;
             Key tmp;
-            tmp.s = getState();
-            //tmp.s = getState2();
-            tmp.a = a;
+            tmp.s = getState3();
+            //tmp.s = getState();
+            //tmp.a = a;
             oldQ = getQ(tmp);
         }
 
