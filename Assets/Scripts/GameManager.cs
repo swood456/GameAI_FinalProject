@@ -114,8 +114,11 @@ public class GameManager : MonoBehaviour {
 
     void update_world()
     {
-        if (snake_dead)
-            return;
+		if (snake_dead) {
+			last_score = 0;
+			learn = false;
+			return;
+		}
         
 
         if(controll_tye == ControllType.SimpleAI)
