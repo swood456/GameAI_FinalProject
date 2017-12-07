@@ -25,8 +25,16 @@ public struct State3
     public int angle_degrees;
 }
 
+public struct State4
+{
+    public bool is_left_valid;
+    public bool is_fwd_valid;
+    public bool is_right_valid;
+    public int angle_rounded;
+}
+
 public struct Key{
-    public State3 s;
+    public State4 s;
     //public State2 s;
     //public State s;
 	//public int a;
@@ -268,7 +276,7 @@ public class GameManager : MonoBehaviour {
         {
 			Key t_key;
             //t_key.s = getState();
-            t_key.s = getState3();
+            t_key.s = getState4();
             //t_key.a = getBestActionQ();
 			float n_Q = getQ (t_key);
             float reward = score - last_score;
@@ -525,7 +533,49 @@ public class GameManager : MonoBehaviour {
 
         return s;
     }
-    
+
+    State4 getState4()
+    {
+        State4 s = new State4();
+
+        Vector2 left_pos = snake_pos + directions[(snake_dir_index + directions.Length - 1) % directions.Length];
+        s.is_left_valid = map[(int)left_pos.x, (int)left_pos.y] == 'e' || map[(int)left_pos.x, (int)left_pos.y] == 'a';
+
+        Vector2 fwd_pos = snake_pos + directions[snake_dir_index];
+        try
+        {
+            s.is_fwd_valid = map[(int)fwd_pos.x, (int)fwd_pos.y] == 'e' || map[(int)fwd_pos.x, (int)fwd_pos.y] == 'a';
+        }
+        catch
+        {
+            s.is_fwd_valid = false;
+        }
+
+
+        Vector2 right_pos = snake_pos + directions[(snake_dir_index + 1) % directions.Length];
+        s.is_right_valid = map[(int)right_pos.x, (int)right_pos.y] == 'e' || map[(int)right_pos.x, (int)right_pos.y] == 'a';
+
+        Vector2 appleVec = (Vector2)apple.transform.position - snake_pos;
+        s.angle_rounded = (int)(Vector2.Angle(directions[snake_dir_index], appleVec.normalized) / 15);
+
+        if (Vector2.Dot(appleVec, directions[(snake_dir_index + directions.Length - 1) % directions.Length]) < 0)
+        {
+            s.angle_rounded *= -1;
+            //s.angle_rounded = -1;
+        }
+        else
+        {
+            //s.angle_rounded = 1;
+        }
+
+        
+
+        //s.angle_rounded /= 15;
+        
+
+        return s;
+    }
+
 
     float getQ(Key k){
 		float QVal;
@@ -545,7 +595,7 @@ public class GameManager : MonoBehaviour {
 	}
 
 	int getBestActionQ(){
-        State3 s = getState3 ();
+        State4 s = getState4 ();
         //State2 s = getState2();
         List<int> actions = new List<int>();
 
@@ -655,7 +705,7 @@ public class GameManager : MonoBehaviour {
             int a = getBestActionQ();
             snake_dir_index = a;
             Key tmp;
-            tmp.s = getState3();
+            tmp.s = getState4();
             //tmp.s = getState();
             //tmp.a = a;
             oldQ = getQ(tmp);
