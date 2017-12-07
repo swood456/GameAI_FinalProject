@@ -433,7 +433,7 @@ public class GameManager : MonoBehaviour {
 		State s = getState ();
 		List<int> actions = new List<int>();
 
-		//all possible actions from this state
+        //all possible actions from this state
 		actions.Add((snake_dir_index + directions.Length - 1) % directions.Length);
 		actions.Add(snake_dir_index);
 		actions.Add((snake_dir_index + 1) % directions.Length);
@@ -462,7 +462,7 @@ public class GameManager : MonoBehaviour {
 		k_prime.a = best;
 		last = k_prime;
 		return best;
-	}
+    }
 
 
 	void Q_learning_controlls()
@@ -499,8 +499,9 @@ public class GameManager : MonoBehaviour {
         actions.Add(snake_dir_index);
         actions.Add((snake_dir_index + 1) % directions.Length);
 
-        if (Random.Range(0, 1) < rho)
+        if (Random.Range(0.0f, 1.0f) < rho)
         {
+            print("doing random");
             int rng_index = Random.Range(0, actions.Count);
             snake_dir_index = actions[rng_index];
             Key tmp;
