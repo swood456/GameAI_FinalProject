@@ -114,6 +114,7 @@ public class GameManager : MonoBehaviour {
         }
         map[(int)tailPos[0].x, (int)tailPos[0].y] = 't';
 
+        print("starting index: " + snake_dir_index);
 
         // this drops framerate significantly (so that each movement takes 1 frame and is still easy to speed up)
         // this is probably not the best solution for making the game both run slow and fast
@@ -163,6 +164,8 @@ public class GameManager : MonoBehaviour {
                         }
                     }
                 }
+
+                snake_dir_index = 1;
 
                 // set up tail
                 Vector2 tail_vec2 = controller.transform.position - (Vector3)directions[snake_dir_index];
@@ -464,8 +467,9 @@ public class GameManager : MonoBehaviour {
 
 	void Q_learning_controlls()
 	{
-		// simple AI controller
-
+        /*
+         * OLD VERSION - allowed snake to turn 2 times, which isn't allowed
+         * 
 		// list of possible directions, we will pick one at random
 		List<int> actions = new List<int>();
 
@@ -485,6 +489,37 @@ public class GameManager : MonoBehaviour {
 		tmp.s = getState();
 		tmp.a = a;
 		oldQ = getQ (tmp);
-	}
+        */
+
+        // I don't know if this is a valid fix or not
+        List<int> actions = new List<int>();
+
+        //all possible actions from this state
+        actions.Add((snake_dir_index + directions.Length - 1) % directions.Length);
+        actions.Add(snake_dir_index);
+        actions.Add((snake_dir_index + 1) % directions.Length);
+
+        if (Random.Range(0, 1) < rho)
+        {
+            int rng_index = Random.Range(0, actions.Count);
+            snake_dir_index = actions[rng_index];
+            Key tmp;
+            tmp.s = getState();
+            tmp.a = rng_index;
+            oldQ = getQ(tmp);
+        }
+        else
+        {
+            int a = getBestActionQ();
+            snake_dir_index = a;
+            Key tmp;
+            tmp.s = getState();
+            tmp.a = a;
+            oldQ = getQ(tmp);
+        }
+
+        
+        
+    }
 
 }
