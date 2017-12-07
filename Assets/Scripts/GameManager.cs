@@ -7,8 +7,9 @@ public struct State{
 	public Vector2 a_pos;
 	public List<Vector2> t;
 }
+
 public struct Key{
-	public State s;
+    public State s;
 	public int a;
 }
 
@@ -16,7 +17,7 @@ public class GameManager : MonoBehaviour {
 
     Vector2[] directions = {Vector2.up, Vector2.right, Vector2.down, Vector2.left };
 
-    public enum ControllType { Player, SimpleAI, QLearn};
+    public enum ControllType { Player, SimpleAI, QLearn, MediumAI};
     public ControllType controll_tye = ControllType.Player;
 
     private char[,] map;
@@ -56,6 +57,7 @@ public class GameManager : MonoBehaviour {
 	private float oldQ = 0;
 	private float last_score = 0;
 
+    float prev_dist;
 
     // Use this for initialization
     void Start () {
@@ -83,7 +85,7 @@ public class GameManager : MonoBehaviour {
                 }
             }
         }
-
+        prev_dist = Vector2.Distance(snake_pos, (Vector2)apple.transform.position);
         // set up tail
         Vector2 tail_vec2 = controller.transform.position - (Vector3)directions[snake_dir_index];//(Vector3)snake_dir;
         tailPos = new List<Vector2>();
@@ -114,7 +116,7 @@ public class GameManager : MonoBehaviour {
         }
         map[(int)tailPos[0].x, (int)tailPos[0].y] = 't';
 
-        print("starting index: " + snake_dir_index);
+        //print("starting index: " + snake_dir_index);
 
         // this drops framerate significantly (so that each movement takes 1 frame and is still easy to speed up)
         // this is probably not the best solution for making the game both run slow and fast
@@ -141,7 +143,20 @@ public class GameManager : MonoBehaviour {
     {
 		if (snake_dead) {
 			last_score = 0;
-			learn = false;
+
+            // DEATH
+            Key t_key;
+            t_key.s = getState();
+            t_key.a = snake_dir_index;
+            float n_Q = getQ(t_key);
+            float reward =  -1;
+            if (learn)
+            {
+                float newQ = (1 - alpha) * oldQ + alpha * (reward + gamma * n_Q);
+                setQ(last, newQ);
+            }
+            learn = false;
+            
             if(!replay_on_death)
 			    return;
             else
@@ -185,7 +200,7 @@ public class GameManager : MonoBehaviour {
                 map[(int)tailPos[0].x, (int)tailPos[0].y] = 't';
 
                 print("score: "+ score);
-                print("num moves: " + num_moves_this_game);
+                //print("num moves: " + num_moves_this_game);
                 num_moves_this_game = 0;
                 score = 0;
                 snake_dead = false;
@@ -197,7 +212,10 @@ public class GameManager : MonoBehaviour {
         {
             simple_AI_controlls();
         }
-        // move the snake
+        else if(controll_tye == ControllType.MediumAI)
+        {
+
+        }
         else if (controll_tye == ControllType.Player)
         {
             if (isTurnLeft())
@@ -212,11 +230,12 @@ public class GameManager : MonoBehaviour {
         else if(controll_tye == ControllType.QLearn)
         {
 			Key t_key;
-			t_key.s = getState();
-			t_key.a = getBestActionQ();;
+            t_key.s = getState();
+            //t_key.s = getState2();
+            t_key.a = getBestActionQ();
 			float n_Q = getQ (t_key);
-			float reward = score - last_score;
-			if (learn) {
+            float reward = score - last_score;
+            if (learn) {
 				float newQ = (1 - alpha) * oldQ + alpha * (reward + gamma * n_Q);
 				setQ (last, newQ);
 			} else {
@@ -414,7 +433,26 @@ public class GameManager : MonoBehaviour {
 		return s;
 	}
 
-	float getQ(Key k){
+    /*
+    State2 getState2()
+    {
+        State2 s = new State2();
+        Vector2 left_pos = snake_pos + directions[(snake_dir_index + directions.Length - 1) % directions.Length];
+        s.is_left_valid = map[(int)left_pos.x, (int)left_pos.y] == 'e' || map[(int)left_pos.x, (int)left_pos.y] == 'a';
+
+        Vector2 fwd_pos = snake_pos + directions[snake_dir_index];
+        s.is_fwd_valid = map[(int)fwd_pos.x, (int)fwd_pos.y] == 'e' || map[(int)fwd_pos.x, (int)fwd_pos.y] == 'a';
+
+        Vector2 right_pos = snake_pos + directions[(snake_dir_index + 1) % directions.Length];
+        s.is_right_valid = map[(int)right_pos.x, (int)right_pos.y] == 'e' || map[(int)right_pos.x, (int)right_pos.y] == 'a';
+
+        s.x_diff = (int)snake_pos.x - (int)apple.transform.position.x;
+        s.y_diff = (int)snake_pos.y - (int)apple.transform.position.y;
+        return s;
+    }
+    */
+
+    float getQ(Key k){
 		float QVal;
 		bool suc = QValueStore.TryGetValue(k, out QVal);
 		if (suc) {
@@ -430,8 +468,9 @@ public class GameManager : MonoBehaviour {
 	}
 
 	int getBestActionQ(){
-		State s = getState ();
-		List<int> actions = new List<int>();
+        State s = getState ();
+        //State2 s = getState2();
+        List<int> actions = new List<int>();
 
         //all possible actions from this state
 		actions.Add((snake_dir_index + directions.Length - 1) % directions.Length);
@@ -495,19 +534,41 @@ public class GameManager : MonoBehaviour {
         List<int> actions = new List<int>();
 
         //all possible actions from this state
+        /*
         actions.Add((snake_dir_index + directions.Length - 1) % directions.Length);
         actions.Add(snake_dir_index);
         actions.Add((snake_dir_index + 1) % directions.Length);
+        */
+
+        // only allow us to use ones that are not death
+        Vector2 left_pos = snake_pos + directions[(snake_dir_index + directions.Length - 1) % directions.Length];
+        if (map[(int)left_pos.x, (int)left_pos.y] == 'e' || map[(int)left_pos.x, (int)left_pos.y] == 'a')
+            actions.Add((snake_dir_index + directions.Length - 1) % directions.Length);
+
+        Vector2 fwd_pos = snake_pos + directions[snake_dir_index];
+        if (map[(int)fwd_pos.x, (int)fwd_pos.y] == 'e' || map[(int)fwd_pos.x, (int)fwd_pos.y] == 'a')
+            actions.Add(snake_dir_index);
+
+        Vector2 right_pos = snake_pos + directions[(snake_dir_index + 1) % directions.Length];
+        if (map[(int)right_pos.x, (int)right_pos.y] == 'e' || map[(int)right_pos.x, (int)right_pos.y] == 'a')
+            actions.Add((snake_dir_index + 1) % directions.Length);
 
         if (Random.Range(0.0f, 1.0f) < rho)
         {
-            print("doing random");
-            int rng_index = Random.Range(0, actions.Count);
-            snake_dir_index = actions[rng_index];
+            //print("doing random");
+            if(actions.Count != 0)
+            {
+                int rng_index = Random.Range(0, actions.Count);
+                snake_dir_index = actions[rng_index];
+            }
+            
+            /*
             Key tmp;
             tmp.s = getState();
+            //tmp.s = getState2();
             tmp.a = rng_index;
             oldQ = getQ(tmp);
+            */
         }
         else
         {
@@ -515,6 +576,7 @@ public class GameManager : MonoBehaviour {
             snake_dir_index = a;
             Key tmp;
             tmp.s = getState();
+            //tmp.s = getState2();
             tmp.a = a;
             oldQ = getQ(tmp);
         }
