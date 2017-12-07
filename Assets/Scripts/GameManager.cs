@@ -27,6 +27,8 @@ public class GameManager : MonoBehaviour {
     Vector2 snake_pos;
     Vector2 snake_old_pos;
 
+    public bool replay_on_death = true;
+
     GameObject apple;
 
     bool snake_dead = false;
@@ -57,7 +59,7 @@ public class GameManager : MonoBehaviour {
     void Start () {
         // set up the world
         MakeWorld makeWorld = GetComponent<MakeWorld>();
-        map = makeWorld.createMap();
+        map = makeWorld.createMap(true);
         map_w = makeWorld.map_w;
         map_h = makeWorld.map_h;
         apple = makeWorld.real_apple;
@@ -117,7 +119,48 @@ public class GameManager : MonoBehaviour {
 		if (snake_dead) {
 			last_score = 0;
 			learn = false;
-			return;
+            if(!replay_on_death)
+			    return;
+            else
+            {
+                // set the board back up, but don't initialize new things
+                MakeWorld makeWorld = GetComponent<MakeWorld>();
+                map = makeWorld.createMap(false);
+                map_w = makeWorld.map_w;
+                map_h = makeWorld.map_h;
+                apple = makeWorld.real_apple;
+
+                for (int i = 0; i < map_w + 2; ++i)
+                {
+                    for (int j = 0; j < map_h + 2; ++j)
+                    {
+                        if (map[i, j] == 'h')
+                        {
+                            snake_pos.x = i;
+                            snake_pos.y = j;
+                        }
+                    }
+                }
+
+                // set up tail
+                Vector2 tail_vec2 = controller.transform.position - (Vector3)directions[snake_dir_index];
+                tailPos = new List<Vector2>();
+                tailPos.Add(tail_vec2);
+
+                // destroy all old tail objects
+                foreach (GameObject g in tailObjs)
+                {
+                    Destroy(g);
+                }
+
+                GameObject tail = Instantiate(tailObj, tail_vec2, Quaternion.identity);                
+                tailObjs = new List<GameObject>();
+                tailObjs.Add(tail);
+
+                map[(int)tailPos[0].x, (int)tailPos[0].y] = 't';
+
+                snake_dead = false;
+            }
 		}
         
 

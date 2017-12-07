@@ -26,7 +26,7 @@ public class MakeWorld : MonoBehaviour {
     private char[,] map;
     public GameObject real_apple;
 
-    public char[,] createMap()
+    public char[,] createMap(bool make_new_stuff)
     {
         // for now map is a 2d array of chars, might be better to be something simpler?
         map = new char[map_w + 2, map_h + 2];
@@ -45,25 +45,37 @@ public class MakeWorld : MonoBehaviour {
             map[i, 0] = 'w';
             map[i, map_h + 1] = 'w';
 
-            // place a wall block
-            Instantiate(Wall, new Vector3(i, 0), Quaternion.identity);
-            Instantiate(Wall, new Vector3(i, map_h + 1), Quaternion.identity);
+            if(make_new_stuff)
+            {
+                // place a wall block
+                Instantiate(Wall, new Vector3(i, 0), Quaternion.identity);
+                Instantiate(Wall, new Vector3(i, map_h + 1), Quaternion.identity);
+            }
         }
 
         for(int j = 0; j < map_h; ++j)
         {
             map[0, j + 1] = 'w';
             map[map_w + 1, j + 1] = 'w';
-
-            Instantiate(Wall, new Vector3(0, j+1), Quaternion.identity);
-            Instantiate(Wall, new Vector3(map_w + 1, j + 1), Quaternion.identity);
+            if (make_new_stuff)
+            {
+                Instantiate(Wall, new Vector3(0, j + 1), Quaternion.identity);
+                Instantiate(Wall, new Vector3(map_w + 1, j + 1), Quaternion.identity);
+            }
         }
 
         int s_i = Random.Range(0, map_w - 1);
         int s_j = Random.Range(0, map_h - 1);
 
         map[s_i + 1, s_j + 1] = 'h';
-        Instantiate(SnakeHead, new Vector3(s_i + 1, s_j + 1), Quaternion.identity);
+        if (make_new_stuff)
+            Instantiate(SnakeHead, new Vector3(s_i + 1, s_j + 1), Quaternion.identity);
+        else
+        {
+            SnakeController snake_head = FindObjectOfType<SnakeController>();
+            snake_head.transform.position = new Vector3(s_i + 1, s_j + 1);
+            snake_head.transform.rotation = Quaternion.identity;
+        }
 
         // start position for the apple
         //  start it in the same spot as snake head then move it until free
@@ -77,7 +89,13 @@ public class MakeWorld : MonoBehaviour {
         }
 
         map[a_i + 1, a_j + 1] = 'a';
-        real_apple = Instantiate(Apple, new Vector3(a_i + 1, a_j + 1), Quaternion.identity);
+        if (make_new_stuff)
+            real_apple = Instantiate(Apple, new Vector3(a_i + 1, a_j + 1), Quaternion.identity);
+        else
+        {
+            real_apple.transform.position = new Vector3(a_i + 1, a_j + 1);
+            real_apple.transform.rotation = Quaternion.identity;
+        }
 
 
         return map;
