@@ -26,6 +26,7 @@ public class GameManager : MonoBehaviour {
     int snake_dir_index = 1;
     Vector2 snake_pos;
     Vector2 snake_old_pos;
+    private int num_moves_this_game = 0;
 
     public bool replay_on_death = true;
 
@@ -38,6 +39,7 @@ public class GameManager : MonoBehaviour {
     int map_h;
 
     public float desiredFrameRate;
+    public int updates_per_frame = 1;
     float curTime = 0.0f;
 
     List<Vector2> tailPos;
@@ -91,6 +93,25 @@ public class GameManager : MonoBehaviour {
         tailObjs = new List<GameObject>();
         tailObjs.Add(tail);
 
+        if(map[(int)tailPos[0].x, (int)tailPos[0].y] == 'a')
+        {
+            // find a new random place for apple
+            map[(int)tailPos[0].x, (int)tailPos[0].y] = 't';
+
+            int a_i = Random.Range(1, map_w);
+            int a_j = Random.Range(1, map_h);
+
+            while (map[a_i, a_j] != 'e')
+            {
+                a_i = Random.Range(1, map_w);
+                a_j = Random.Range(1, map_h);
+            }
+
+            map[a_i, a_j] = 'a';
+
+            // move apple in world
+            apple.transform.position = new Vector3(a_i, a_j);
+        }
         map[(int)tailPos[0].x, (int)tailPos[0].y] = 't';
 
 
@@ -105,10 +126,11 @@ public class GameManager : MonoBehaviour {
         curTime += Time.deltaTime;
         if(curTime >= 1.0f/desiredFrameRate)
         {
-            update_world();
+            for(int i = 0; i < updates_per_frame; ++i)
+                update_world();
             curTime = 0.0f;
         }
-		print (snake_pos);
+		//print (snake_pos);
         
     }
     bool addTailPiece = false;
@@ -159,6 +181,10 @@ public class GameManager : MonoBehaviour {
 
                 map[(int)tailPos[0].x, (int)tailPos[0].y] = 't';
 
+                print("score: "+ score);
+                print("num moves: " + num_moves_this_game);
+                num_moves_this_game = 0;
+                score = 0;
                 snake_dead = false;
             }
 		}
@@ -232,6 +258,7 @@ public class GameManager : MonoBehaviour {
         
 
         controller.transform.position = snake_pos;
+        num_moves_this_game++;
 
         // debug: print all indexes with h
         //int count = 0;
@@ -373,7 +400,6 @@ public class GameManager : MonoBehaviour {
         {
             // do something real here other than just setting it to be dead
             snake_dead = true;
-            print("DEAD!");
         }
     }
 

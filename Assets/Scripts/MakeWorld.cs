@@ -64,8 +64,8 @@ public class MakeWorld : MonoBehaviour {
             }
         }
 
-        int s_i = Random.Range(0, map_w - 1);
-        int s_j = Random.Range(0, map_h - 1);
+        int s_i = Random.Range(1, map_w - 2);
+        int s_j = Random.Range(1, map_h - 2);
 
         map[s_i + 1, s_j + 1] = 'h';
         if (make_new_stuff)
