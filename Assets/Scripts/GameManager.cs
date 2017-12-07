@@ -2,6 +2,16 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+public struct State{
+	public Vector2 s_pos;
+	public Vector2 a_pos;
+	public List<Vector2> t;
+}
+public struct Key{
+	public State s;
+	public int a;
+}
+
 public class GameManager : MonoBehaviour {
 
     Vector2[] directions = {Vector2.up, Vector2.right, Vector2.down, Vector2.left };
@@ -32,6 +42,17 @@ public class GameManager : MonoBehaviour {
     List<GameObject> tailObjs;
     int starting_length = 2;
 
+	//Q learning vars
+	Dictionary<Key, float> QValueStore;
+	public float rho;
+	public float alpha;
+	public float gamma;
+	private bool learn = false;
+	private Key last;
+	private float oldQ = 0;
+	private float last_score = 0;
+
+
     // Use this for initialization
     void Start () {
         // set up the world
@@ -44,6 +65,8 @@ public class GameManager : MonoBehaviour {
         controller = FindObjectOfType<SnakeController>();
         //snake_dir.x = 1;
         //snake_dir.y = 0;
+
+		QValueStore = new Dictionary<Key, float>();
 
         for(int i = 0; i < map_w + 2; ++i)
         {
@@ -83,6 +106,7 @@ public class GameManager : MonoBehaviour {
             update_world();
             curTime = 0.0f;
         }
+		print (snake_pos);
         
     }
     bool addTailPiece = false;
@@ -112,7 +136,18 @@ public class GameManager : MonoBehaviour {
         }
         else if(controll_tye == ControllType.QLearn)
         {
-            // TODO: Q learning
+			Key t_key;
+			t_key.s = getState();
+			t_key.a = getBestActionQ();;
+			float n_Q = getQ (t_key);
+			float reward = score - last_score;
+			if (learn) {
+				float newQ = (1 - alpha) * oldQ + alpha * (reward + gamma * n_Q);
+				setQ (last, newQ);
+			} else {
+				learn = true;
+			}
+			Q_learning_controlls();
         }
         
 
@@ -295,4 +330,89 @@ public class GameManager : MonoBehaviour {
             print("DEAD!");
         }
     }
+
+	State getState(){
+		State s = new State();
+		s.s_pos = snake_pos;
+		s.a_pos = apple.transform.position;
+		s.t = tailPos;
+		return s;
+	}
+
+	float getQ(Key k){
+		float QVal;
+		bool suc = QValueStore.TryGetValue(k, out QVal);
+		if (suc) {
+			return QVal;
+		}
+		QValueStore.Add (k, 0.0f);
+		return 0.0f;
+	}
+
+	void setQ(Key k, float val){
+		QValueStore.Remove(k);
+		QValueStore.Add (k, val);
+	}
+
+	int getBestActionQ(){
+		State s = getState ();
+		List<int> actions = new List<int>();
+
+		//all possible actions from this state
+		actions.Add((snake_dir_index + directions.Length - 1) % directions.Length);
+		actions.Add(snake_dir_index);
+		actions.Add((snake_dir_index + 1) % directions.Length);
+
+		int best = 0;
+		float bestQval = float.NegativeInfinity;
+
+		foreach (int act in actions) {
+			Key k;
+			k.s = s;
+			k.a = act;
+			float newVal = getQ (k);
+			if (newVal > bestQval) {
+				best = act;
+				bestQval = newVal;
+			} else if (newVal == bestQval) {
+				int r = Random.Range(0,2);
+				if (r > 0) {
+					best = act;
+					bestQval = newVal;
+				}
+			}
+		}
+		Key k_prime;
+		k_prime.s = s;
+		k_prime.a = best;
+		last = k_prime;
+		return best;
+	}
+
+
+	void Q_learning_controlls()
+	{
+		// simple AI controller
+
+		// list of possible directions, we will pick one at random
+		List<int> actions = new List<int>();
+
+		//all possible actions from this state
+		actions.Add((snake_dir_index + directions.Length - 1) % directions.Length);
+		actions.Add(snake_dir_index);
+		actions.Add((snake_dir_index + 1) % directions.Length);
+
+		if (Random.Range(0,1) < rho) {
+			int rng_index = Random.Range(0, actions.Count);
+			snake_dir_index = actions[rng_index];
+		}
+
+	    int a = getBestActionQ ();
+		snake_dir_index = a;
+		Key tmp;
+		tmp.s = getState();
+		tmp.a = a;
+		oldQ = getQ (tmp);
+	}
+
 }
