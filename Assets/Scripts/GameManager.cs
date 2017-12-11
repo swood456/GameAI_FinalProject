@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEditor;
 
 public struct State{
 	public Vector2 s_pos;
@@ -68,6 +69,8 @@ public class GameManager : MonoBehaviour {
     int map_w;
     int map_h;
 
+    private bool firstPause = true;
+    public int numberSessions = 10;
     public float desiredFrameRate;
     public int updates_per_frame = 1;
     float curTime = 0.0f;
@@ -237,6 +240,16 @@ public class GameManager : MonoBehaviour {
                 map[(int)tailPos[0].x, (int)tailPos[0].y] = 't';
 
                 print("score: "+ score);
+                if (numberSessions > 0)
+                {
+                    numberSessions -= 1;
+                }
+                if ((numberSessions < 1) && (firstPause == true))
+                {
+                    EditorApplication.isPaused = true;
+                    firstPause = false;
+                    numberSessions = 101;
+                }
                 //print("num moves: " + num_moves_this_game);
                 num_moves_this_game = 0;
                 score = 0;
@@ -578,7 +591,7 @@ public class GameManager : MonoBehaviour {
         {
             // do something real here other than just setting it to be dead
             snake_dead = true;
-            reward = -200.0f;
+            reward = -100.0f;
         }
     }
 
