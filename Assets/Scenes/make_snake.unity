@@ -256,7 +256,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aaef6466b5053ce488d8a5b29bdaf9e0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  controll_tye: 2
+  controll_tye: 4
   tailObj: {fileID: 1236256913327490, guid: 7855b5bedc823e349b7b4bb2f337cb0f, type: 2}
   replay_on_death: 1
   print_debug: 0
@@ -265,3 +265,5 @@ MonoBehaviour:
   rho: 0.05
   alpha: 0.05
   gamma: 0.5
+  qLearn_random_change: 0.05
+  qLearn_gamma: 0.4

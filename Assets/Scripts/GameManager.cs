@@ -96,6 +96,7 @@ public class GameManager : MonoBehaviour {
     private State4 qLearn_prev_state;
     private float reward = 0.0f;
     private bool is_first_turn = true;
+    public bool qLearn_update_value = true;
 
     // Use this for initialization
     void Start () {
@@ -165,6 +166,11 @@ public class GameManager : MonoBehaviour {
             for(int i = 0; i < updates_per_frame; ++i)
                 update_world();
             curTime = 0.0f;
+        }
+
+        if(Input.GetKeyDown(KeyCode.Z))
+        {
+            print("yeaaa boi");
         }
     }
     bool addTailPiece = false;
@@ -327,9 +333,10 @@ public class GameManager : MonoBehaviour {
                     }
                 }
             }
-            if (!is_first_turn)
+            if (!is_first_turn && qLearn_update_value)
             {
-                qLearnV2Dict[qLearn_prev_state][qLearn_prev_action_index] = reward + qLearn_gamma * best_q;
+                //qLearnV2Dict[qLearn_prev_state][qLearn_prev_action_index] = reward + qLearn_gamma * best_q;
+                qLearnV2Dict[qLearn_prev_state][qLearn_prev_action_index] = reward + qLearn_gamma * best_q + qLearnV2Dict[qLearn_prev_state][qLearn_prev_action_index] / 2.0f;
                 reward = 0.0f;
             }
             is_first_turn = false;
