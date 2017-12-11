@@ -44,7 +44,7 @@ public class GameManager : MonoBehaviour {
 
     Vector2[] directions = {Vector2.up, Vector2.right, Vector2.down, Vector2.left };
 
-    public enum ControllType { Player, SimpleAI, QLearn, RandomAI, QLearnV2};
+    public enum ControllType { Player, SimpleAI, QLearn, RandomAI, QLearnV2, MediumAI};
     public ControllType controll_tye = ControllType.Player;
 
     private char[,] map;
@@ -167,11 +167,7 @@ public class GameManager : MonoBehaviour {
                 update_world();
             curTime = 0.0f;
         }
-
-        if(Input.GetKeyDown(KeyCode.Z))
-        {
-            print("yeaaa boi");
-        }
+        
     }
     bool addTailPiece = false;
     Vector2 oldAppleLoc;
@@ -365,6 +361,42 @@ public class GameManager : MonoBehaviour {
 
             qLearn_prev_action_index = best_index;
             qLearn_prev_state = cur_state;
+        }
+        else if(controll_tye == ControllType.MediumAI)
+        {
+            State4 m_state = getState4();
+            /*
+            if(m_state.angle_rounded < -2 && m_state.is_left_valid)
+            {
+                turn_left();
+            } else if(m_state.angle_rounded > 2 && m_state.is_right_valid)
+            {
+                turn_right();
+            } else if(m_state.angle_rounded < 2 && m_state.angle_rounded > -2 && m_state.is_fwd_valid)
+            {
+                // go forward
+            }
+            else
+            {
+                simple_AI_controlls();
+            }
+            */
+            if (m_state.angle_rounded < -2 && m_state.is_right_valid)
+            {
+                turn_right();
+            }
+            else if (m_state.angle_rounded > 2 && m_state.is_left_valid)
+            {
+                turn_left();
+            }
+            else if (m_state.angle_rounded < 2 && m_state.angle_rounded > -2 && m_state.is_fwd_valid)
+            {
+                // go forward
+            }
+            else
+            {
+                simple_AI_controlls();
+            }
         }
         
 

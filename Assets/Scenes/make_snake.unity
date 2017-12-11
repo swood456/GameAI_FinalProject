@@ -260,10 +260,11 @@ MonoBehaviour:
   tailObj: {fileID: 1236256913327490, guid: 7855b5bedc823e349b7b4bb2f337cb0f, type: 2}
   replay_on_death: 1
   print_debug: 0
-  desiredFrameRate: 200
-  updates_per_frame: 200
+  desiredFrameRate: 20
+  updates_per_frame: 1
   rho: 0.05
   alpha: 0.05
   gamma: 0.5
   qLearn_random_change: 0.05
   qLearn_gamma: 0.4
+  qLearn_update_value: 1
