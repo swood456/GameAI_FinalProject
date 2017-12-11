@@ -44,7 +44,7 @@ public class GameManager : MonoBehaviour {
 
     Vector2[] directions = {Vector2.up, Vector2.right, Vector2.down, Vector2.left };
 
-    public enum ControllType { Player, SimpleAI, QLearn, RandomAI};
+    public enum ControllType { Player, SimpleAI, QLearn, RandomAI, QLearnV2};
     public ControllType controll_tye = ControllType.Player;
 
     private char[,] map;
@@ -87,6 +87,15 @@ public class GameManager : MonoBehaviour {
 	private float last_score = 0;
 
     float prev_dist;
+
+    [Header("Q learn V2 information")]
+    public float qLearn_random_change = 0.01f;
+    public float qLearn_gamma = 0.3f;
+    private Dictionary<State4, List<float>> qLearnV2Dict;
+    private int qLearn_prev_action_index;
+    private State4 qLearn_prev_state;
+    private float reward = 0.0f;
+    private bool is_first_turn = true;
 
     // Use this for initialization
     void Start () {
@@ -145,12 +154,7 @@ public class GameManager : MonoBehaviour {
         }
         map[(int)tailPos[0].x, (int)tailPos[0].y] = 't';
 
-        //print("starting index: " + snake_dir_index);
-
-        // this drops framerate significantly (so that each movement takes 1 frame and is still easy to speed up)
-        // this is probably not the best solution for making the game both run slow and fast
-        //QualitySettings.vSyncCount = 0;
-        //Application.targetFrameRate = 4;
+        qLearnV2Dict = new Dictionary<State4, List<float>>();
     }
 	
 	// Update is called once per frame
@@ -162,10 +166,6 @@ public class GameManager : MonoBehaviour {
                 update_world();
             curTime = 0.0f;
         }
-        //print (snake_pos);
-
-        if (Input.GetKeyDown(KeyCode.Z))
-            print("num things in dict: " + QValueStore.Count);
     }
     bool addTailPiece = false;
     Vector2 oldAppleLoc;
@@ -287,6 +287,77 @@ public class GameManager : MonoBehaviour {
 				learn = true;
 			}
 			Q_learning_controlls();
+        }
+        else if(controll_tye == ControllType.QLearnV2)
+        {
+            State4 cur_state = qLearnGetState(snake_pos, snake_dir_index);
+
+            List<float> action_list;
+
+            if(!qLearnV2Dict.ContainsKey(cur_state))
+            {
+                action_list = new List<float>();
+                action_list.Add(0.0f);
+                action_list.Add(0.0f);
+                action_list.Add(0.0f);
+
+                qLearnV2Dict.Add(cur_state, action_list);
+            }
+            else
+            {
+                qLearnV2Dict.TryGetValue(cur_state, out action_list);
+            }
+
+            // update previous q value
+            float best_q = float.MinValue;
+            int best_index = -1;
+            for (int i = 0; i < 3; ++i)
+            {
+                if (action_list[i] > best_q)
+                {
+                    best_q = action_list[i];
+                    best_index = i;
+                } else if(action_list[i] == best_q)
+                {
+                    // randomly pick one of the two
+                    if(Random.Range(0.0f, 1.0f) < 0.5f)
+                    {
+                        best_q = action_list[i];
+                        best_index = i;
+                    }
+                }
+            }
+            if (!is_first_turn)
+            {
+                qLearnV2Dict[qLearn_prev_state][qLearn_prev_action_index] = reward + qLearn_gamma * best_q;
+                reward = 0.0f;
+            }
+            is_first_turn = false;
+
+            // see if we should do something random or do the real thing
+            if (Random.Range(0.0f, 1.0f) < qLearn_random_change)
+            {
+                // do a random action
+                best_index = Random.Range(0, 3);
+            }
+
+            if(best_index == 0)
+            {
+                // turn left
+                turn_left();
+            }
+            else if (best_index == 1)
+            {
+                // straight
+            }
+            else
+            {
+                // turn right
+                turn_right();
+            }
+
+            qLearn_prev_action_index = best_index;
+            qLearn_prev_state = cur_state;
         }
         
 
@@ -461,12 +532,14 @@ public class GameManager : MonoBehaviour {
 
             // move apple in world
             apple.transform.position = new Vector3(a_i, a_j);
+            reward = 100.0f;
         }
         
         else
         {
             // do something real here other than just setting it to be dead
             snake_dead = true;
+            reward = -200.0f;
         }
     }
 
@@ -534,6 +607,37 @@ public class GameManager : MonoBehaviour {
         return s;
     }
 
+    State4 qLearnGetState(Vector2 pos, int dir_index)
+    {
+        State4 s = new State4();
+        Vector2 left_pos = pos + directions[(dir_index + directions.Length - 1) % directions.Length];
+        s.is_left_valid = map[(int)left_pos.x, (int)left_pos.y] == 'e' || map[(int)left_pos.x, (int)left_pos.y] == 'a';
+
+        Vector2 fwd_pos = pos + directions[dir_index];
+        try
+        {
+            s.is_fwd_valid = map[(int)fwd_pos.x, (int)fwd_pos.y] == 'e' || map[(int)fwd_pos.x, (int)fwd_pos.y] == 'a';
+        }
+        catch
+        {
+            s.is_fwd_valid = false;
+        }
+
+
+        Vector2 right_pos = pos + directions[(dir_index + 1) % directions.Length];
+        s.is_right_valid = map[(int)right_pos.x, (int)right_pos.y] == 'e' || map[(int)right_pos.x, (int)right_pos.y] == 'a';
+
+        Vector2 appleVec = (Vector2)apple.transform.position - pos;
+        s.angle_rounded = (int)(Vector2.Angle(directions[dir_index], appleVec.normalized) / 15);
+
+        if (Vector2.Dot(appleVec, directions[(dir_index + directions.Length - 1) % directions.Length]) < 0)
+        {
+            s.angle_rounded *= -1;
+        }
+
+        return s;
+    }
+
     State4 getState4()
     {
         State4 s = new State4();
@@ -561,21 +665,10 @@ public class GameManager : MonoBehaviour {
         if (Vector2.Dot(appleVec, directions[(snake_dir_index + directions.Length - 1) % directions.Length]) < 0)
         {
             s.angle_rounded *= -1;
-            //s.angle_rounded = -1;
         }
-        else
-        {
-            //s.angle_rounded = 1;
-        }
-
-        
-
-        //s.angle_rounded /= 15;
-        
 
         return s;
     }
-
 
     float getQ(Key k){
 		float QVal;
